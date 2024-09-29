@@ -375,7 +375,6 @@ require('lazy').setup({
       -- This opens a window that shows you all of the keymaps for the current
       -- Telescope picker. This is really useful to discover what Telescope can
       -- do as well as how to actually do it!
-
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       require('telescope').setup {
@@ -388,6 +387,9 @@ require('lazy').setup({
         --   },
         -- },
         -- pickers = {}
+        defaults = {
+          file_ignore_patterns = { 'node_modules', 'vendor' },
+        },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -906,6 +908,35 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+      harpoon:setup()
+
+      local function map(lhs, rhs, opts)
+        vim.keymap.set('n', lhs, rhs, opts or {})
+      end
+      map('<leader>A', function()
+        harpoon:list():add()
+      end)
+      map('<leader>h', function()
+        harpoon.ui:toggle_quick_menu(harpoon:list())
+      end)
+      print(harpoon:list())
+      for i = 1, 9 do
+        map('<leader>' .. i, function()
+          harpoon:list():select(i)
+        end)
+        map('<leader>a' .. i, function()
+          harpoon:list():replace_at(i)
+        end)
+      end
+    end,
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the

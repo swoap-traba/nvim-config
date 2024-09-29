@@ -1,3 +1,5 @@
+## nvim config for AustinCarter, adapted from kickstart.nvim 
+
 # kickstart.nvim
 
 ## Introduction
