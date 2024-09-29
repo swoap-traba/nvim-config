@@ -388,7 +388,7 @@ require('lazy').setup({
         -- },
         -- pickers = {}
         defaults = {
-          file_ignore_patterns = { 'node_modules', 'vendor' },
+          file_ignore_patterns = { 'node_modules', 'vendor', 'dist', 'bin', 'bin-int' },
         },
         extensions = {
           ['ui-select'] = {
