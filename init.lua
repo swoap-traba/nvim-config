@@ -22,6 +22,7 @@
 
 What is Kickstart?
 
+
   Kickstart.nvim is *not* a distribution.
 
   Kickstart.nvim is a starting point for your own configuration.
@@ -33,6 +34,7 @@ What is Kickstart?
     or immediately breaking it into modular pieces. It's up to you!
 
     If you don't know anything about Lua, I recommend taking some time to read through
+
     a guide. One possible example which will only take 10-15 minutes:
       - https://learnxinyminutes.com/docs/lua/
 
@@ -91,7 +93,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -102,7 +104,8 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+--
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -705,7 +708,8 @@ require('lazy').setup({
         -- python = { "isort", "black" },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'prettierd', 'prettier', stop_after_first = true },
       },
     },
   },
@@ -870,8 +874,59 @@ require('lazy').setup({
       --  and try some other statusline plugin
       local statusline = require 'mini.statusline'
       -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
+      statusline.setup {
+        use_icons = vim.g.have_nerd_font,
+      }
 
+      -- Mode -----------------------------------------------------------------------
+      -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
+      -- (otherwise those symbols are not displayed).
+      local CTRL_S = vim.api.nvim_replace_termcodes('<C-S>', true, true, true)
+      local CTRL_V = vim.api.nvim_replace_termcodes('<C-V>', true, true, true)
+
+      -- stylua: ignore start
+      local modes = setmetatable({
+        ['n']    = { short = 'N',   hl = 'MiniStatuslineModeNormal' },
+        ['v']    = { short = 'V',   hl = 'MiniStatuslineModeVisual' },
+        ['V']    = { short = 'V-L', hl = 'MiniStatuslineModeVisual' },
+        [CTRL_V] = { short = 'V-B', hl = 'MiniStatuslineModeVisual' },
+        ['s']    = { short = 'S',   hl = 'MiniStatuslineModeVisual' },
+        ['S']    = { short = 'S-L', hl = 'MiniStatuslineModeVisual' },
+        [CTRL_S] = { short = 'S-B', hl = 'MiniStatuslineModeVisual' },
+        ['i']    = { short = 'I',   hl = 'MiniStatuslineModeInsert' },
+        ['R']    = { short = 'R',   hl = 'MiniStatuslineModeReplace' },
+        ['c']    = { short = 'C',   hl = 'MiniStatuslineModeCommand' },
+        ['r']    = { short = 'P',   hl = 'MiniStatuslineModeOther' },
+        ['!']    = { short = 'Sh',  hl = 'MiniStatuslineModeOther' },
+        ['t']    = { short = 'T',   hl = 'MiniStatuslineModeOther' },
+      }, {
+        -- By default return 'Unknown' but this shouldn't be needed
+        __index = function()
+          return   { long = 'Unknown',  short = 'U',   hl = '%#MiniStatuslineModeOther#' }
+        end,
+      })
+      -- stylua: ignore end
+
+      statusline.section_mode = function(args)
+        local mode_info = modes[vim.fn.mode()]
+
+        return mode_info.short, mode_info.hl
+      end
+
+      ---@diagnostic disable-next-line: duplicate-set-field
+      statusline.section_git = function()
+        return ''
+      end
+
+      ---@diagnostic disable-next-line: duplicate-set-field
+      statusline.section_diff = function()
+        return ''
+      end
+
+      ---@diagnostic disable-next-line: duplicate-set-field
+      statusline.section_lsp = function()
+        return ''
+      end
       -- You can configure sections in the statusline by overriding their
       -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
@@ -927,14 +982,13 @@ require('lazy').setup({
       map('<leader>h', function()
         harpoon.ui:toggle_quick_menu(harpoon:list())
       end)
-      print(harpoon:list())
       for i = 1, 9 do
         map('<leader>' .. i, function()
           harpoon:list():select(i)
-        end)
+        end, { desc = 'Jump to code mark ' .. i })
         map('<leader>a' .. i, function()
           harpoon:list():replace_at(i)
-        end)
+        end, { desc = 'Set code mark ' .. i })
       end
     end,
   },
@@ -952,9 +1006,28 @@ require('lazy').setup({
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
+  {
+    'pwntester/octo.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope.nvim',
+      -- OR 'ibhagwan/fzf-lua',
+      'nvim-tree/nvim-web-devicons',
+    },
+    config = function()
+      require('octo').setup {
+        picker = 'telescope',
+      }
+    end,
+    keys = {
+      { '<leader>opl', '<cmd>Octo pr list<cr>', desc = 'Octo PR list' },
+      { '<leade>ors', '<cmd>Octo review start<cr>', desc = 'Octo start review' },
+      { '<leader>oca', '<cmd>Octo comment add<cr>', desc = 'Octo add comment' },
+    },
+  },
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
