@@ -1,4 +1,4 @@
-## nvim config for AustinCarter, adapted from kickstart.nvim 
+## nvim config for Swoap, adapted from kickstart.nvim 
 
 # kickstart.nvim
 
